@@ -1,0 +1,9 @@
+{
+    "board": "arduino:avr:nano",
+    "configuration": "cpu=atmega328",
+    "port": "/dev/ttyUSB0",
+    "sketch_inactive1": "examples/ghero-example/ghero-example.ino",
+    "sketch_inactive2": "examples/ghero-develop/ghero-develop.ino",
+    "sketch": "examples/ghero-midi/ghero-midi.ino",
+    "output": "../../build/ghero-example"
+}
