@@ -92,12 +92,12 @@ boolean GuitarC::sixBytesEqual(short a[], short b01, short b23, short b45)
 // Strum Up:   data[5] ---- ---0
 boolean GuitarC::strumDown()
 {
-    return (data[4] ^ 0xFF) == 0x40;
+    return ((data[4] ^ 0xFF) & 0x40) != 0;
 }
 
 boolean GuitarC::strumUp()
 {
-    return (data[5] ^ 0xFF) == 0x01;
+    return ((data[5] ^ 0xFF) & 0x01) != 0;
 }
 
 // +/- buttons

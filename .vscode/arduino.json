@@ -4,6 +4,7 @@
     "port": "/dev/ttyUSB0",
     "sketch_inactive1": "examples/ghero-example/ghero-example.ino",
     "sketch_inactive2": "examples/ghero-develop/ghero-develop.ino",
-    "sketch": "examples/ghero-midi/ghero-midi.ino",
+    "sketch_inactive3": "examples/ghero-midi/ghero-midi.ino",
+    "sketch": "examples/ghero-speaker/ghero-speaker.ino",
     "output": "../../build/ghero-example"
 }

@@ -1,6 +1,18 @@
 #include <ghero.h>
 #include <MIDI.h>
 
+/**
+    Example for sound output through MIDI Out.
+
+    The Midi jack is connexted according to the Arduino MIDI tutorial (https://www.arduino.cc/en/Tutorial/Midi)
+    - MIDI jack pin 5 connected to Digital pin 1 through a 220 ohm resistor
+    - MIDI jack pin 2 connected to ground
+    - MIDI jack pin 4 connected to +5V through a 220 ohm resistor 
+
+    Created by Johannes Bergmann,
+    Copyright 2018 License: GNU GPL v3 http://www.gnu.org/licenses/gpl.html
+*/
+
 #define MIDI_CHANNEL 1
 #define TONE_VELOCITY 100
 
