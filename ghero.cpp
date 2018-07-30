@@ -116,8 +116,8 @@ boolean GuitarC::minus()
 
 // Fret buttons
 // ==============
-// If no fret button is pressed all bits of data[5] are 1: 1111 1111
-// If a button is pressed, one bit gets the value 0
+// If no fret button is bitset all bits of data[5] are 1: 1111 1111
+// If a button is   bitset, one bit gets the value 0
 // Green  ---0 ----
 // Red    -0-- ----
 // Yellow ---- 0---
@@ -188,18 +188,11 @@ boolean GuitarC::fretOrange()
     return fret(FRET_ORANGE);
 }
 
-// If whammy is not used, data[3] is 0000 1111. If it is pushed the value is 0001 xxxx with x ranging from 0000 to 1111.
-// Returns 0 if whammy bar is not used and 0x0F if whammy bar pushed fully down
-int GuitarC::whammyValue()
-{
-    return ((data[3] >> 4) & 1) * (data[3] & 0x0F);
-}
-
 // Touch buttons
 // =============
 // Touch on two buttons can only be detected if they are neighbours.
 // If they are not neighbours, the lower touch doesn't affect the data bits.
-// The bits of data[2] when no touch button is pressed:    0000 1111
+// The bits of data[2] when no touch button is  bitset:    0000 1111
 const uint8_t TOUCHBITS_GREEN = 0x04;       // Green       ---- 0-00
 const uint8_t TOUCHBITS_RED = 0x0A;         // Red         ---- -0-0
 const uint8_t TOUCHBITS_YELLOW = 0x12;      // Yellow      ---1 00-0
@@ -281,6 +274,30 @@ boolean GuitarC::touchBlue()
 boolean GuitarC::touchOrange()
 {
     return data[2] == TOUCHBITS_BLUE_ORANGE || data[2] == TOUCHBITS_ORANGE;
+}
+
+unsigned int GuitarC::buttonBitset() 
+{
+    unsigned int bitset = 0;
+    bitset |= fretGreen();
+    bitset |= fretRed() << 1;
+    bitset |= fretYellow() << 2;
+    bitset |= fretBlue() << 3;
+    bitset |= fretOrange() << 4;
+    bitset |= touchGreen() << 5;
+    bitset |= touchRed() << 6;
+    bitset |= touchYellow() << 7;
+    bitset |= touchBlue() << 8;
+    bitset |= touchOrange() << 9;
+    return bitset;
+}
+
+
+// If whammy is not used, data[3] is 0000 1111. If it is pushed the value is 0001 xxxx with x ranging from 0000 to 1111.
+// Returns 0 if whammy bar is not used and 0x0F if whammy bar pushed fully down
+int GuitarC::whammyValue()
+{
+    return ((data[3] >> 4) & 1) * (data[3] & 0x0F);
 }
 
 // Joystick

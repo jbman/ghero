@@ -33,6 +33,9 @@
 unsigned int base = 4;
 unsigned long lastBaseChange;
 unsigned int playingPitch = 0;
+GuitarNotifier notifier;
+
+const int NOTES[] = {NOTE_C4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_E5};
 
 void setup()
 {
@@ -42,123 +45,46 @@ void setup()
     pinMode(13, OUTPUT);
 
     Guitar.begin();
-    delay(100);
+    delay(200);
+    Guitar.read();
 
-    playTone(NOTE_C4);
+    // notifier.onPressed(printPressed);
+    // notifier.onReleased(printReleased);
+    
+    notifier.onPressed(playTone);
+    notifier.onReleased(stopTone);
+
+    beginTones();
+}
+
+void printPressed(int fret)
+{
+    Serial.print("Pressed ");
+    Serial.println(fret);
+}
+
+void printReleased(int fret)
+{
+    Serial.print("Released ");
+    Serial.println(fret);
+}
+
+void beginTones() {
+    playTone(0);
     delay(50);
-    playTone(NOTE_D4);
+    playTone(1);
     delay(50);
-    playTone(NOTE_E4);
+    playTone(2);
     delay(50);
-    playTone(NOTE_F4);
+    playTone(3);
     delay(50);
-    stopTone();
+    stopTone(0);
 }
 
 void loop()
 {
     Guitar.read();
-
-    int newPitch = playingPitch;
-
-    if (Guitar.strumDown())
-    {
-        if (Guitar.fretGreen())
-        {
-            newPitch = NOTE_C4;
-        }
-        if (Guitar.fretRed())
-        {
-            newPitch = NOTE_D4;
-        }
-        if (Guitar.fretYellow())
-        {
-            newPitch = NOTE_E4;
-        }
-        if (Guitar.fretBlue())
-        {
-            newPitch = NOTE_F4;
-        }
-        if (Guitar.fretOrange())
-        {
-            newPitch = NOTE_G4;
-        }
-        if (Guitar.touchGreen())
-        {
-            newPitch = NOTE_A4;
-        }
-        if (Guitar.touchRed())
-        {
-            newPitch = NOTE_B4;
-        }
-        if (Guitar.touchYellow())
-        {
-            newPitch = NOTE_C5;
-        }
-        if (Guitar.touchBlue())
-        {
-            newPitch = NOTE_D5;
-        }
-        if (Guitar.touchOrange())
-        {
-            newPitch = NOTE_E5;
-        }
-    }
-
-    if (Guitar.strumUp())
-    {
-        if (Guitar.fretGreen())
-        {
-            newPitch = NOTE_CS4;
-        }
-        if (Guitar.fretRed())
-        {
-            newPitch = NOTE_DS4;
-        }
-        if (Guitar.fretYellow())
-        {
-            newPitch = NOTE_F4;
-        }
-        if (Guitar.fretBlue())
-        {
-            newPitch = NOTE_FS4;
-        }
-        if (Guitar.fretOrange())
-        {
-            newPitch = NOTE_GS4;
-        }
-        if (Guitar.touchGreen())
-        {
-            newPitch = NOTE_AS4;
-        }
-        if (Guitar.touchRed())
-        {
-           newPitch = NOTE_C5;
-        }
-        if (Guitar.touchYellow())
-        {
-            newPitch = NOTE_CS5;
-        }
-        if (Guitar.touchBlue())
-        {
-            newPitch = NOTE_DS5;
-        }
-        if (Guitar.touchOrange())
-        {
-            newPitch = NOTE_F5;
-        }
-    }
-
-    if (newPitch != playingPitch)
-    {
-        playTone(newPitch);
-        playingPitch = newPitch;
-    }
-
-    if (Guitar.fret() <= 0 && Guitar.touch() <= 0)
-    {
-        stopTone();
-    }
+    notifier.notifyHandlers(Guitar);
 
     if (millis() - lastBaseChange > 500)
     {
@@ -175,16 +101,18 @@ void loop()
     }
 }
 
-// output pitch range (120 - 1500Hz)
-void playTone(int pitch)
+void playTone(int position)
 {
     digitalWrite(13, HIGH);
-    tone(SPEAKER_PIN, pitch);
-    tone(SPEAKER_PIN, (pitch + Guitar.whammyValue()) * base / 4);
+    tone(SPEAKER_PIN, (NOTES[position] + Guitar.whammyValue()) * base / 4);
 }
 
-void stopTone()
+void stopTone(int position)
 {
-    digitalWrite(13, LOW);
-    noTone(SPEAKER_PIN);
+    // Stop tone if no button pressed at all
+    if (Guitar.buttonBitset() == 0) 
+    {
+        digitalWrite(13, LOW);
+        noTone(SPEAKER_PIN);
+    }
 }

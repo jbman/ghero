@@ -20,13 +20,22 @@
 
 #include "Arduino.h"
 
+/**
+ * This class reads data from the guitar controller.
+ * It provides methods which provide the current state (e.g. if a button is pressed 
+ * or a value for the whammy bar position).
+ * 
+ * An instance of this class is exported as "Guitar" by this header file.
+ * So just use Guitar.begin() in the Arduino setup function and Guitar.read() 
+ * inside your Arduino loop function
+ */
 class GuitarC
 {
 public:
     GuitarC();
 
     /**
-     * Connect to the controller. Call Guitar.begin() inside your Arduino setuo function.
+     * Connect to the controller. Call Guitar.begin() inside your Arduino setup function.
      */
     void begin();
 
@@ -110,6 +119,16 @@ public:
     boolean touchBlue();
     boolean touchOrange();
 
+    /**
+    * Returns a number where the button state of the Guitar is represented by bits.
+    * If a button is pressed, the bit is set to 1. The lowest bit is for the first button (green).
+    * 
+    * The n-th button bit can be sesolved with:
+    * b = bitset() 
+    * nthButtonPressed = ((b >> n) & 1) == 1;
+    */
+    unsigned int buttonBitset();
+
     /** 
      * Returns 0 is the whammy bar is not used and 15 if whammy bar is pushed fully down.
      */
@@ -146,5 +165,60 @@ private:
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_GUITAR)
 extern GuitarC Guitar;
 #endif
+
+class GuitarState {
+    public:
+        /**
+         * Stores the current state provided by the given guitar reference.
+         */
+        GuitarState(const GuitarC &guitar);
+
+        /**
+        * Returns true the fret or touch button at given position is pressed.
+        * position: The button number. Nzmbers from 0 (green fret button) up to 9 (orange touch button) are valid.
+        */
+        bool isPressed(unsigned int position);
+
+    private:
+        // The bits of this field are used to store which buttons are pressed.
+        unsigned int buttonBitset = 0;
+        int whammy = 0;
+};
+
+/**
+ * This class allows to register handlers which are notified in case of a state change.
+ * It uses the Guitar instance to read the current state, compares it against the last state and 
+ * invokes the registered handler functions.
+ */
+class GuitarNotifier
+{
+  public:
+    /**
+    * Registers a handler function which is notified when a fret or touch button 
+    * changes state from released to pressed.
+    * 
+    * The argument of the handler function is a number from 0 (green fret button) up to 
+    * 9 (orange touch button).
+    */
+    void onPressed(void (*handler)(int));
+
+    /**
+    * Registers a handler function which is notified when a fret or touch button 
+    * changes state from pressed to released.
+    * 
+    * The argument of the handler function is a number from 0 (green fret button) up to 
+    * 9 (orange touch button).
+    */
+    void onReleased(void (*handler)(int));
+
+    void notifyHandlers(const GuitarC &guitar);
+
+  private:
+    GuitarState *state;
+    GuitarState *lastState;
+
+    void (*pressedHandler)(int) = NULL;
+    void (*releasedHandler)(int) = NULL;
+};
 
 #endif
