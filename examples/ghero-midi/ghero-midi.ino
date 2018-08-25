@@ -20,21 +20,27 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 
 const int MAJOR_SCALE[] = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16};
 
+int transpose = 0;
+
 typedef struct
 {
     boolean frets[10] = {false, false, false, false, false, false, false, false, false, false};
     int whammy = 0;
+    boolean plus = false;
+    boolean minus = false;
 } State;
 
 void (*fretPressedHandler)(int);
 void (*fretReleasedHandler)(int);
 
 State lastState;
-int lastFret = 0;
 
 void setup()
 {
     Serial.begin(9600);
+
+    // Built-in LED
+    pinMode(13, OUTPUT);
 
     // Send MIDI messages on channel 1
     MIDI.begin(MIDI_CHANNEL);
@@ -69,12 +75,14 @@ void printReleased(int fret)
 
 void playTone(int fret)
 {
-    MIDI.sendNoteOn(42 + MAJOR_SCALE[fret], TONE_VELOCITY, MIDI_CHANNEL);
+    digitalWrite(13, HIGH);
+    MIDI.sendNoteOn(42 + transpose + MAJOR_SCALE[fret], TONE_VELOCITY, MIDI_CHANNEL);
 }
 
 void stopTone(int fret)
 {
-    MIDI.sendNoteOff(42 + MAJOR_SCALE[fret], 0, MIDI_CHANNEL);
+    digitalWrite(13, LOW);
+    MIDI.sendNoteOff(42 + transpose + MAJOR_SCALE[fret], 0, MIDI_CHANNEL);
 }
 
 void loop()
@@ -92,6 +100,8 @@ void loop()
     state.frets[8] = Guitar.touchBlue();
     state.frets[9] = Guitar.touchOrange();
     state.whammy = Guitar.whammyValue();
+    state.plus = Guitar.plus();
+    state.minus = Guitar.minus();
 
     for (int i = 0; i < 10; i++)
     {
@@ -104,6 +114,17 @@ void loop()
             fretReleasedHandler(i);
         }
     }
+
+    if (state.plus && !lastState.plus)
+    {
+        transpose++;
+        transpose = min(transpose, 16);
+    }
+    if (state.minus && !lastState.minus)
+    {
+        transpose--;
+        transpose = max(transpose, -16);
+    }     
 
     if (state.whammy != lastState.whammy)
     {

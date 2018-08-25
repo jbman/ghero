@@ -1,4 +1,5 @@
 #include <ghero.h>
+#include <ghero_events.h>
 
 /**
     Example for sound output through a speaker.
@@ -33,7 +34,6 @@
 unsigned int base = 4;
 unsigned long lastBaseChange;
 unsigned int playingPitch = 0;
-GuitarNotifier notifier;
 
 const int NOTES[] = {NOTE_C4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_E5};
 
@@ -47,53 +47,35 @@ void setup()
     Guitar.begin();
     delay(200);
     Guitar.read();
-
-    // notifier.onPressed(printPressed);
-    // notifier.onReleased(printReleased);
     
-    notifier.onPressed(playTone);
-    notifier.onReleased(stopTone);
+    Events.onPressed(playTone);
+    Events.onReleased(stopTone);
 
-    beginTones();
+    playStartupTones();
 }
 
-void printPressed(int fret)
-{
-    Serial.print("Pressed ");
-    Serial.println(fret);
-}
-
-void printReleased(int fret)
-{
-    Serial.print("Released ");
-    Serial.println(fret);
-}
-
-void beginTones() {
-    playTone(0);
-    delay(50);
-    playTone(1);
-    delay(50);
-    playTone(2);
-    delay(50);
-    playTone(3);
-    delay(50);
-    stopTone(0);
+void playStartupTones() {
+    for(int i=0; i<4; i++) 
+    {
+        tone(SPEAKER_PIN, NOTES[i]);
+        delay(50);
+    }
+    noTone(SPEAKER_PIN);
 }
 
 void loop()
 {
-    Guitar.read();
-    notifier.notifyHandlers(Guitar);
+    State state = Guitar.read();
+    Events.newState(state);
 
     if (millis() - lastBaseChange > 500)
     {
-        if (Guitar.plus() && base <= 16)
+        if (state.plus() && base <= 16)
         {
             base = base + base;
             lastBaseChange = millis();
         }
-        else if (Guitar.minus() && base > 1)
+        else if (state.minus() && base > 1)
         {
             base = base / 2;
             lastBaseChange = millis();
@@ -101,16 +83,20 @@ void loop()
     }
 }
 
-void playTone(int position)
+void playTone(int button, State state)
 {
+    Serial.print("Pressed ");
+    Serial.println(button);
     digitalWrite(13, HIGH);
-    tone(SPEAKER_PIN, (NOTES[position] + Guitar.whammyValue()) * base / 4);
+    tone(SPEAKER_PIN, (NOTES[button] + state.whammy()) * base / 4);
 }
 
-void stopTone(int position)
+void stopTone(int button, State state)
 {
+    Serial.print("Released ");
+    Serial.println(button);
     // Stop tone if no button pressed at all
-    if (Guitar.buttonBitset() == 0) 
+    if (state.nonePressed()) 
     {
         digitalWrite(13, LOW);
         noTone(SPEAKER_PIN);
