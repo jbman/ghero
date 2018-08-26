@@ -27,77 +27,40 @@ class State {
         State();
         State(uint8_t data[6]);
 
-        // Check if a button is pressed. 0 = lowest green button, 9 = highest orange button
-        bool pressed(unsigned int button);
-
+        bool pressed(unsigned int button); // Button presed? 0 = lowest green button, 9 = highest orange button
         bool nonePressed(); // Returns true, if no fret or touch button is pessed.
-
         bool strumDown();
         bool strumUp();
         bool plus();
         bool minus();
+        int whammy(); // Whammy bar position: 0 if not used, 15 if whammy bar is pushed fully down
+        int joystick_x(); // Joystick position: -32 (leftmost) .. 0 (neutral) .. 31 (rightmost).
+        int joystick_y(); // Joystick position: 32 (top) .. 0 (neutral) -31 (bottom).
 
-        // Whammy bar position: 0 if not used, 15 if whammy bar is pushed fully down
-        int whammy();
-
-        // Joystick x value. Range: -32 (leftmost position), 0 (neutral position), 31 (rightmost position).
-        int joystick_x();
-
-        // Joystick y value. Range :32 (top position), 0 (neutral position), -31 (bottom position).
-        int joystick_y();
-
-        String toString();
-        String dataToString();
-
-        // Plain data which was read from the controller.
-        uint8_t data[6];
-       
-
+        String toString(); // State as String for debug printing
+        String dataToString(); // Data bytes as String for debugging
+        uint8_t data[6]; // Plain data from the controller. Don't use it, use the other methods.
 
     private:
-        // A bitset which has a 1 for each pressed button.
-        // 0..4 (green..orange fret button) 
-        // 5..9 (green..orange touch button)
         unsigned int buttonBitset;
+ };
 
-        bool fretPressed(uint8_t fretMask);
-        bool touchGreen();
-        bool touchRed();
-        bool touchYellow();
-        bool touchBlue();
-        bool touchOrange();
-};
-
-/*
- * This class reads data from the guitar controller.
- * It provides methods which provide the current state (e.g. if a button is pressed 
- * or a value for the whammy bar position).
- * 
- * An instance of this class is exported as "Guitar" by this header file.
- * So just use Guitar.begin() in the Arduino setup function and Guitar.read() 
- * inside your Arduino loop function
- */
+// This class reads data from the guitar controller.
+// It provides the STate object which can be used to check the guitar state (e.g. if a button is pressed 
+// or the position og the whammy bar.
+// 
+// An instance of this class is exported as "Guitar" by this header file.
+// Use Guitar.begin() in the Arduino setup function and Guitar.read() inside your Arduino loop function
 class GuitarC
 {
 public:
     GuitarC();
-
-    //Connect to the controller. Call Guitar.begin() inside your Arduino setup function.
-    void begin();
-
-    /**
-     * Read data from the controller. Call Guitar.read() inside your Arduino loop function.
-     */
-    State read();
-
-    /** 
-     * Returns a string which describes the controller or a String starting with "Unknown", if the controller is not known to this library.
-     */
-    String identifyController();
+    void begin(); //Connect to the controller. Call it inside your Arduino setup function.
+    State read(); // Read data from the controller. Call it inside your Arduino loop function.
+    String identifyController(); // Describes the controller. Returns a String starting with "Unknown", if the controller is not known to this library.
 
 private:
     short controllerType[3];  
-    bool sixBytesEqual(short a[], short b01, short b23, short b45);
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_GUITAR)

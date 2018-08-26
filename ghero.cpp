@@ -12,6 +12,60 @@ const uint8_t FRET_YELLOW = 1 << 3;  // Yellow ---- 0---
 const uint8_t FRET_BLUE =   1 << 5;  // Blue   --0- ----
 const uint8_t FRET_ORANGE = 1 << 7;  // Orange 0--- ----
 
+// Touch buttons
+// =============
+// Touch on two buttons can only be detected if they are neighbours.
+// If they are not neighbours, the lower touch doesn't affect the data bits.
+// The bits of data[2] when no touch button is pressed:    0000 1111
+const uint8_t TOUCHBITS_GREEN = 0x04;       // Green       ---- 0-00
+const uint8_t TOUCHBITS_RED = 0x0A;         // Red         ---- -0-0
+const uint8_t TOUCHBITS_YELLOW = 0x12;      // Yellow      ---1 00-0
+const uint8_t TOUCHBITS_BLUE = 0x17;        // Blue        ---1 0---
+const uint8_t TOUCHBITS_ORANGE = 0x1F;      // Orange      ---1 ----
+const uint8_t TOUCHBITS_GREEN_RED = 0x06;   // Green+Red   ---- 0--0
+const uint8_t TOUCHBITS_RED_YELLOW = 0x0D;  // Red+Yellow  ---- --0-
+const uint8_t TOUCHBITS_YELLOW_BLUE = 0x14; // Yellow+Blue ---1 0-00
+const uint8_t TOUCHBITS_BLUE_ORANGE = 0x1A; // Blue+Orange ---1 -0-0
+
+namespace {
+    // Helper functions in anonymous namespace, only visible in this file
+
+    // Checks if one fret button is pressed. 
+    // Can also be used to check if at least one of multiple fret buttons are pressed.
+    // Examples:
+    // - Check if GREEN is pressed: Guitar.fret(Guitar.FRET_GREEN)
+    // - Check if GREEN or RED is pressed: Guitar.fret(Guitar.FRET_GREEN | Guitar.FRET_RED)) 
+    bool fretPressed(uint8_t data_5, uint8_t fretMask)
+    {
+        return ((data_5 ^ 0xFF) & fretMask) != 0;
+    }
+
+    bool touchGreen(uint8_t data_2)
+    {
+        return data_2 == TOUCHBITS_GREEN || data_2 == TOUCHBITS_GREEN_RED;
+    }
+
+    bool touchRed(uint8_t data_2)
+    {
+        return data_2 == TOUCHBITS_GREEN_RED || data_2 == TOUCHBITS_RED || data_2 == TOUCHBITS_RED_YELLOW;
+    }
+
+    bool touchYellow(uint8_t data_2)
+    {
+        return data_2 == TOUCHBITS_RED_YELLOW || data_2 == TOUCHBITS_YELLOW || data_2 == TOUCHBITS_YELLOW_BLUE;
+    }
+
+    bool touchBlue(uint8_t data_2)
+    {
+        return data_2 == TOUCHBITS_YELLOW_BLUE || data_2 == TOUCHBITS_BLUE || data_2 == TOUCHBITS_BLUE_ORANGE;
+    }
+
+    bool touchOrange(uint8_t data_2)
+    {
+        return data_2 == TOUCHBITS_BLUE_ORANGE || data_2 == TOUCHBITS_ORANGE;
+    }
+}
+
 State::State() { }
 
 State::State(uint8_t controller_data[6])
@@ -20,18 +74,21 @@ State::State(uint8_t controller_data[6])
         data[i] = controller_data[i];
     }
 
+    // The bitset with 1 for each pressed button.
+    // 0..4 (green..orange fret button) 
+    // 5..9 (green..orange touch button)
     buttonBitset = 0;
-    buttonBitset |= fretPressed(FRET_GREEN);
-    buttonBitset |= fretPressed(FRET_RED) << 1;
-    buttonBitset |= fretPressed(FRET_YELLOW) << 2;
-    buttonBitset |= fretPressed(FRET_BLUE) << 3;
-    buttonBitset |= fretPressed(FRET_ORANGE) << 4;
-    buttonBitset |= touchGreen() << 5;
-    buttonBitset |= touchRed() << 6;
-    buttonBitset |= touchYellow() << 7;
-    buttonBitset |= touchBlue() << 8;
-    buttonBitset |= touchOrange() << 9;
-    buttonBitset |= touchOrange() << 9;
+    buttonBitset |= fretPressed(data[5], FRET_GREEN);
+    buttonBitset |= fretPressed(data[5], FRET_RED) << 1;
+    buttonBitset |= fretPressed(data[5], FRET_YELLOW) << 2;
+    buttonBitset |= fretPressed(data[5], FRET_BLUE) << 3;
+    buttonBitset |= fretPressed(data[5], FRET_ORANGE) << 4;
+    buttonBitset |= touchGreen(data[2]) << 5;
+    buttonBitset |= touchRed(data[2]) << 6;
+    buttonBitset |= touchYellow(data[2]) << 7;
+    buttonBitset |= touchBlue(data[2]) << 8;
+    buttonBitset |= touchOrange(data[2]) << 9;
+    buttonBitset |= touchOrange(data[2]) << 9;
 }
 
 bool State::pressed(unsigned int position) 
@@ -49,12 +106,12 @@ bool State::nonePressed()
 // Strum bits are 0 on strum. Without a strum the bits are 1.
 // Strum Down: data[4] -0-- ----
 // Strum Up:   data[5] ---- ---0
-boolean State::strumDown()
+bool State::strumDown()
 {
     return ((data[4] ^ 0xFF) & 0x40) != 0;
 }
 
-boolean State::strumUp()
+bool State::strumUp()
 {
     return ((data[5] ^ 0xFF) & 0x01) != 0;
 }
@@ -63,12 +120,12 @@ boolean State::strumUp()
 // =============
 // + Button [4] ---- -0--
 // - Button [4] ---0 ----
-boolean State::plus()
+bool State::plus()
 {
     return ((data[4] ^ 0xFF) & 0x04) != 0;
 }
 
-boolean State::minus()
+bool State::minus()
 {
     return ((data[4] ^ 0xFF) & 0x10) != 0;
 }
@@ -145,60 +202,13 @@ String State::dataToString()
     return text;
 }
 
-// ***** private *****
-
-// Checks if one fret button is pressed. 
-// Can also be used to check if at least one of multiple fret buttons are pressed.
-// Examples:
-// - Check if GREEN is pressed: Guitar.fret(Guitar.FRET_GREEN)
-// - Check if GREEN or RED is pressed: Guitar.fret(Guitar.FRET_GREEN | Guitar.FRET_RED)) 
-bool State::fretPressed(uint8_t fretMask)
-{
-    return ((data[5] ^ 0xFF) & fretMask) != 0;
-}
-
-
-// Touch buttons
-// =============
-// Touch on two buttons can only be detected if they are neighbours.
-// If they are not neighbours, the lower touch doesn't affect the data bits.
-// The bits of data[2] when no touch button is pressed:    0000 1111
-const uint8_t TOUCHBITS_GREEN = 0x04;       // Green       ---- 0-00
-const uint8_t TOUCHBITS_RED = 0x0A;         // Red         ---- -0-0
-const uint8_t TOUCHBITS_YELLOW = 0x12;      // Yellow      ---1 00-0
-const uint8_t TOUCHBITS_BLUE = 0x17;        // Blue        ---1 0---
-const uint8_t TOUCHBITS_ORANGE = 0x1F;      // Orange      ---1 ----
-const uint8_t TOUCHBITS_GREEN_RED = 0x06;   // Green+Red   ---- 0--0
-const uint8_t TOUCHBITS_RED_YELLOW = 0x0D;  // Red+Yellow  ---- --0-
-const uint8_t TOUCHBITS_YELLOW_BLUE = 0x14; // Yellow+Blue ---1 0-00
-const uint8_t TOUCHBITS_BLUE_ORANGE = 0x1A; // Blue+Orange ---1 -0-0
-
-boolean State::touchGreen()
-{
-    return data[2] == TOUCHBITS_GREEN || data[2] == TOUCHBITS_GREEN_RED;
-}
-
-boolean State::touchRed()
-{
-    return data[2] == TOUCHBITS_GREEN_RED || data[2] == TOUCHBITS_RED || data[2] == TOUCHBITS_RED_YELLOW;
-}
-
-boolean State::touchYellow()
-{
-    return data[2] == TOUCHBITS_RED_YELLOW || data[2] == TOUCHBITS_YELLOW || data[2] == TOUCHBITS_YELLOW_BLUE;
-}
-
-boolean State::touchBlue()
-{
-    return data[2] == TOUCHBITS_YELLOW_BLUE || data[2] == TOUCHBITS_BLUE || data[2] == TOUCHBITS_BLUE_ORANGE;
-}
-
-boolean State::touchOrange()
-{
-    return data[2] == TOUCHBITS_BLUE_ORANGE || data[2] == TOUCHBITS_ORANGE;
-}
-
 // --- GuitarC implementation ---
+
+namespace {
+    sixBytesEqual(short a[], short b01, short b23, short b45) {
+        return a[0] == b01 && a[1] == b23 && a[2] == b45;
+    }
+}
 
 GuitarC::GuitarC() {}
 
@@ -277,11 +287,6 @@ String GuitarC::identifyController()
         result += " 0x" + String(controllerType[i], HEX);
     }
     return result;
-}
-
-boolean GuitarC::sixBytesEqual(short a[], short b01, short b23, short b45)
-{
-    return a[0] == b01 && a[1] == b23 && a[2] == b45;
 }
 
 // Define global Guitar object

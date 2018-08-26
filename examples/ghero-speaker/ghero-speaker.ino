@@ -1,14 +1,13 @@
-#include <ghero.h>
-#include <ghero_events.h>
-
 /**
-    Example for sound output through a speaker.
+    Example: Wii Guitar Controller plays sound through a speaker.
 
     The passive speaker is connected to pin 8 of the Arduino and to Ground.
 
     Created by Johannes Bergmann,
     Copyright 2018 License: GNU GPL v3 http://www.gnu.org/licenses/gpl.html
 */
+#include <ghero.h>
+#include <ghero_events.h>
 
 #define NOTE_C4 262
 #define NOTE_CS4 277
@@ -31,11 +30,11 @@
 
 #define SPEAKER_PIN 8
 
+const int NOTES[] = {NOTE_C4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_E5};
+
 unsigned int base = 4;
 unsigned long lastBaseChange;
-unsigned int playingPitch = 0;
-
-const int NOTES[] = {NOTE_C4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_E5};
+int currentNote = -1;
 
 void setup()
 {
@@ -48,8 +47,9 @@ void setup()
     delay(200);
     Guitar.read();
     
-    Events.onPressed(playTone);
-    Events.onReleased(stopTone);
+    GuitarEvents.onPressed(pressed);
+    GuitarEvents.onReleased(released);
+    GuitarEvents.onWhammy(whammy);
 
     playStartupTones();
 }
@@ -66,7 +66,7 @@ void playStartupTones() {
 void loop()
 {
     State state = Guitar.read();
-    Events.newState(state);
+    GuitarEvents.newState(state);
 
     if (millis() - lastBaseChange > 500)
     {
@@ -83,22 +83,43 @@ void loop()
     }
 }
 
-void playTone(int button, State state)
+void playTone(State state)
+{
+    digitalWrite(13, HIGH);
+    tone(SPEAKER_PIN, (NOTES[currentNote] + state.whammy()) * base / 4);
+}
+
+void stopTone()
+{
+    currentNote = -1;
+    digitalWrite(13, LOW);
+    noTone(SPEAKER_PIN);
+}
+
+void pressed(int button, State state)
 {
     Serial.print("Pressed ");
     Serial.println(button);
-    digitalWrite(13, HIGH);
-    tone(SPEAKER_PIN, (NOTES[button] + state.whammy()) * base / 4);
+    currentNote = button;
+    playTone(state);
 }
 
-void stopTone(int button, State state)
+void released(int button, State state)
 {
-    Serial.print("Released ");
+    Serial.print("Released "); 
     Serial.println(button);
-    // Stop tone if no button pressed at all
+    // Stop tone if all buttons are released
     if (state.nonePressed()) 
     {
-        digitalWrite(13, LOW);
-        noTone(SPEAKER_PIN);
+        stopTone();
+    }
+}
+
+void whammy(int value, State state, State last) 
+{
+    Serial.print("Whammy ");
+    Serial.println(value);
+    if (currentNote >= 0) {
+        playTone(state);
     }
 }
