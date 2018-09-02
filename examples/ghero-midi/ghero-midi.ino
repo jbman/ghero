@@ -2,9 +2,9 @@
 #include <MIDI.h>
 
 /**
-    Example for sound output through MIDI Out.
+    Example: Wii Guitar Controller as MIDI controller.
 
-    The Midi jack is connexted according to the Arduino MIDI tutorial (https://www.arduino.cc/en/Tutorial/Midi)
+    The Midi jack is conneted according to the Arduino MIDI tutorial (https://www.arduino.cc/en/Tutorial/Midi)
     - MIDI jack pin 5 connected to Digital pin 1 through a 220 ohm resistor
     - MIDI jack pin 2 connected to ground
     - MIDI jack pin 4 connected to +5V through a 220 ohm resistor 
