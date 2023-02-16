@@ -2,9 +2,9 @@
 
 ## Description
 
-Ghero is a library for a Wii Guitar Hero controller as Music controller.
+Ghero is an Arduino library for using a Wii Guitar Hero controller as music controller.
 
-The library calls dedictaed functions when a button is pressed, the strum bar is pushed or if the whammy bar is used. 
+The library calls dedicated functions when a button is pressed, the strum bar is pushed or if the whammy bar is used. 
 Use it to play a sound from a speaker or send notes to a MIDI out jack.
 
 ## Examples 
@@ -20,7 +20,7 @@ Find example sketches at folder [examples](examples):
 
 * A Wii Guitar Hero (GH) Controller. I used the fantastic white GH controller from Logitech.
 * An Arduino nano with Atmega 328 chip or other Arduino
-* A WiiChuck Nunchuck Adapter to connect the Arduino with the GH Controller
+* A WiiChuck Nunchuck Adapter to connect the Arduino to the GH Controller
 * Optional: A Speaker for driect sound output
 * Optional: A MIDI Jack
 
