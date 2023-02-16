@@ -10,7 +10,7 @@
     - MIDI jack pin 4 connected to +5V through a 220 ohm resistor 
 
     Created by Johannes Bergmann,
-    Copyright 2018 License: GNU GPL v3 http://www.gnu.org/licenses/gpl.html
+    MIT license, all text above must be included in any redistribution
 */
 
 #define MIDI_CHANNEL 1

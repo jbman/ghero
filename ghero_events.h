@@ -5,7 +5,7 @@
     Hero controller changes.
     
     Created by Johannes Bergmann,
-    Copyright 2018 License: GNU GPL v3 http://www.gnu.org/licenses/gpl.html
+    MIT license, all text above must be included in any redistribution
 */
 #ifndef ghero_guitar_events_h
 #define ghero_guitar_events_h

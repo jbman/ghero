@@ -6,14 +6,14 @@
     Wii guitar hero controllers, but it isn't tested.
 
     The guitar is connected to the arduino with the help of a small passive adapter ("nunchuk adapter für arduino").
-    The releavant output pins of this adapter are '+', '-', 'd' and 'c':
+    The relevant output pins of this adapter are '+', '-', 'd' and 'c':
     - is connected to GND on arduino
     + is connected to +3,3V on arduino
     d is connected to SDA pin (A4 on arduino nano)
     c is connected to SCL pin (A5 on arduino nano)
 
     Created by Johannes Bergmann,
-    Copyright 2018 License: GNU GPL v3 http://www.gnu.org/licenses/gpl.html
+    MIT license, all text above must be included in any redistribution
 */
 #ifndef ghero_h
 #define ghero_h

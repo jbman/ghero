@@ -4,7 +4,7 @@
     The passive speaker is connected to pin 8 of the Arduino and to Ground.
 
     Created by Johannes Bergmann,
-    Copyright 2018 License: GNU GPL v3 http://www.gnu.org/licenses/gpl.html
+    MIT license, all text above must be included in any redistribution
 */
 #include <ghero.h>
 #include <ghero_events.h>
